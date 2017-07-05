@@ -1,0 +1,17 @@
+.todo-list-list__sel-btn{
+    flex: 4;
+    text-align: left;
+    font-size: 15px;
+    padding: 10px 10px 10px 10px;
+}
+
+.todo-list-list__del-btn{
+    flex: 1; 
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
+    height: 100%;
+    padding: 10px 10px 10px 10px;
+}
+
+

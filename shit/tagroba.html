@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <div id="root"> 
+        </div>
+        <script type="text/javascript" src="../js/lib/creativdom.js"></script>
+        <script> 
+            let hyperscript = window.vdom.hyperscript
+
+            let a = (
+                hyperscript('ul', {class: "list"}, 
+                hyperscript('li', null, 'item1'), 
+                hyperscript('li', null, 'item2') ) 
+            )  
+
+            let b = (
+                hyperscript('ul', {className: "list"}, 
+                hyperscript('li', null, 'item1'), 
+                hyperscript('p', null, 'item2'), 
+                hyperscript( 'li', { className: "item3" }, hyperscript('p', null, 'item3.1') ) ) 
+            )
+            
+            // window.vdom.renderHTML(document.getElementById('root'), b)
+            console.log(window.vdom.renderString(b));
+        </script>
+    </body>
+</html>

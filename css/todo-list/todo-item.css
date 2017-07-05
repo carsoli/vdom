@@ -1,0 +1,32 @@
+/*has a checkbox , a delete btn, and text*/
+.chk-box{
+    align-self: center;
+}
+
+.chk-box:checked {
+    -moz-appearance: none;
+    align-self: center; 
+    background-color: lightskyblue;
+    -webkit-text-fill-color: black;
+}
+
+.chk-box__label{
+	text-align: left;
+	height: auto;
+	width: auto;
+    justify-content: flex-start;
+	align-self: center;
+	padding: 10px 10px 10px 10px;
+    font-size: 15px;
+    width: 100%;
+}
+
+.todo-item__label{
+    flex: 6;
+}
+
+.todo-item__btn{
+    align-self: center;
+    flex: 1;
+    padding: 2px 2px 2px 2px;
+}

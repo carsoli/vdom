@@ -1,0 +1,24 @@
+{
+  "name": "flexbox",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "babel": "babel"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "assert": "^1.4.1",
+    "mocha": "^3.4.2",
+    "redom": "^3.0.2",
+    "rollup": "^0.43.0"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.24.1",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "webpack": "^3.0.0"
+  }
+}

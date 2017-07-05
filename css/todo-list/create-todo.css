@@ -1,0 +1,28 @@
+/*has the add btn and the list name*/
+.add-todo{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: auto;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    margin: 0;
+    border-bottom: 2px solid black;
+}
+
+.todo-list-entry__input{
+    flex: 19;
+    font-size: 25px;
+    padding: 5px 10px 5px 10px;
+    height: auto;
+}
+
+.todo-list-entry__btn{
+    flex: 1;
+    margin-right: 5px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 2px;
+    align-self: center;
+}
