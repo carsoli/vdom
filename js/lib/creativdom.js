@@ -20,29 +20,70 @@ hypertext(name, props, ...children): VirtualDOMObject*/
 
 window.vdom = (function(){
     let vDOM; 
-
+    
+    let level= 0;
+    let lastParent = null; //should store reference to a vdom node object
+    let indentation = " " 
+    //a fix==> pass the indentation in the renderString param 
     function renderString(vdom){
         // debugger
         if(typeof vdom == "string"){
-            return vdom //a string 
+            return vdom//a string 
         }
 
-        return ` <${vdom.type}${(vdom.props)?appendProps(vdom.props):''}${appendType(vdom.type, 'first')} 
-  ${((vdom.children)&&(vdom.children.length>0))?(vdom.children.map(renderString)).join('\n  '):''}
-${appendType(vdom.type,'second')} `
-        
+        if (!lastParent){//it's null then that's the first element in the vdom (only satisfied once)
+            lastParent = vdom; 
+        }else if(lastParent.children.includes(vdom)){//if the vdom is not a child of the last parent saved 
+            lastParent = vdom; 
+            indentation = adjustIndentation(++level); 
+        } 
+        //waste time later  ---- try to handle the string thingy
+        return `<${vdom.type}${(vdom.props)?appendProps(vdom.props):''}${appendType(vdom.type, 'first')}
+${indentation}${((vdom.children)&&(vdom.children.length>0))?(vdom.children.map(renderString).join('\n')):''}
+${indentation}${appendType(vdom.type,'second')}`//should store reference to a vdom node object
     }
     
     //helpers
-    function adjustIndentation(){
+    
+    // Array.prototype.joinNodes = function(){
+    //     debugger
+    //idea: split the array, into one with strings and one with nodes
+    //and pass the initial position of each elem as a second value to these 2 new array objects
+    //now join the strings array with "" and join the nodes array with "\n"
+    //loop on both arrays simultaneously and only increment when the larger of both positions has exceeded the 
+    //current i you use to loop on both
+    //but use j and k to loop seperately on either where j & k are initially == i 
 
+    //     let children = this
+    //     children.forEach((elem)=>{
+    //         if(typeof elem =="string" && elem.charAt(elem.length-1)){
+    //             //append an empty string to the node? replace - with ""
+    //             elem+= "."
+    //         }
+    //         else{
+    //             //replace - with "\n"
+    //             elem+= "\n"
+    //         }
+    //     })
+    //     children.join("")
+    //     return children
+    // } 
+
+    function adjustIndentation(_level){
+        // debugger
+        let _indentation = ""
+        for(let i=0 ; i < _level ; i++){
+            _indentation += " "
+        }
+        return _indentation;   
     }
+
     function appendType(type, tagPosition){
         // debugger
         if(tagPosition == 'first'){
             switch(type){
                 //check all self-closing cases
-                case 'input': return ' />';
+                case 'input': return '/>';
                 default: return '>';
             }
         }else if(tagPosition == 'second'){
