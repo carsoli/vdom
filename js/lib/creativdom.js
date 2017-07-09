@@ -3,47 +3,46 @@ type VirtualDOMObject = {
     tag/type: string,
     props: object,
     children: [VirtualDOMObject]
-}
-
-//exported fns are to be used by the actual document to append the final output to the container
-    exports.renderString(VirtualDOMObject): String //takes the vdom and returns a string? useful??
-    exports.renderHTML(container, VirtualDOMObject) //takes the vdom and the container  
-
-updateElement(parent, oldvdom: VirtualDOMObject, newvdom: VirtualDOMObject, indexOfChild): DOMNode   //recursive 
-`createElement(name, props, children): DOMNode 
-``setProps(domNode, props)
-``exports.appendChild(domNode, children)
-``removeChild(parent, index)
-`isChanged($oldNode, newNode): boolean //true if nodes are not equal
-`removeElement(index, $oldNode)
-hypertext(name, props, ...children): VirtualDOMObject*/
+}*/ 
 
 window.vdom = (function(){
+
+    function hyperscript(type, props, ...children){
+        if(props && props['class']){//bc class is a reserved keyword in js
+            let {class: className} = props
+            let propValue = props['class']
+            props['className'] = propValue
+            delete props['class']
+        }
+        //in case one of the elements in the children objects is passed as an array
+        children = (children || []).reduce((acc,child)=> { return acc.concat(child) }, [])
+        return { type, props: props || {}, children: children || []}
+    }
+
     let vDOM; 
-    
     let level= 0;
     let lastParent = null; //should store reference to a vdom node object
     let indentation = " " 
-    //a fix==> pass the indentation in the renderString param 
-    function renderString(vdom){
-        // debugger
+
+    //fix ==> pass the indentation in the renderString param 
+    function renderString(vdom, parentNode){
         if(typeof vdom == "string"){
             return vdom//a string 
         }
 
         if (!lastParent){//it's null then that's the first element in the vdom (only satisfied once)
             lastParent = vdom; 
-        }else if(lastParent.children.includes(vdom)){//if the vdom is not a child of the last parent saved 
-            lastParent = vdom; 
+        }else if(!lastParent.children.includes(vdom)){//if the vdom is not a child of the last parent saved 
+            lastParent = parentNode 
             indentation = adjustIndentation(++level); 
         } 
         //waste time later  ---- try to handle the string thingy
-        return `<${vdom.type}${(vdom.props)?appendProps(vdom.props):''}${appendType(vdom.type, 'first')}
-${indentation}${((vdom.children)&&(vdom.children.length>0))?(vdom.children.map(renderString).join('\n')):''}
-${indentation}${appendType(vdom.type,'second')}`//should store reference to a vdom node object
+        return `<${vdom.type}${(vdom.props)?appendProps(vdom.props):''}${closeTag(vdom.type, 'first')}
+${indentation}${((vdom.children)&&(vdom.children.length>0))?(vdom.children.map((childNode) => renderString(childNode, vdom)).join('\n')):''}
+${indentation}${closeTag(vdom.type,'second')}`
     }
     
-    //helpers
+    /* helpers for renderString(vdom) */
     
     // Array.prototype.joinNodes = function(){
     //     debugger
@@ -70,7 +69,6 @@ ${indentation}${appendType(vdom.type,'second')}`//should store reference to a vd
     // } 
 
     function adjustIndentation(_level){
-        // debugger
         let _indentation = ""
         for(let i=0 ; i < _level ; i++){
             _indentation += " "
@@ -78,8 +76,7 @@ ${indentation}${appendType(vdom.type,'second')}`//should store reference to a vd
         return _indentation;   
     }
 
-    function appendType(type, tagPosition){
-        // debugger
+    function closeTag(type, tagPosition){
         if(tagPosition == 'first'){
             switch(type){
                 //check all self-closing cases
@@ -89,7 +86,7 @@ ${indentation}${appendType(vdom.type,'second')}`//should store reference to a vd
         }else if(tagPosition == 'second'){
             switch(type){
                 //check all self-closing cases
-                case 'input': return;
+                case 'input': return '';
                 default: return ('</' + type + '>') ; 
             }
         }
@@ -97,7 +94,6 @@ ${indentation}${appendType(vdom.type,'second')}`//should store reference to a vd
     }
 
     function appendProps(props){
-        // debugger
         let result = ""
         if (props['className']){
             let value = props['className']
@@ -112,144 +108,202 @@ ${indentation}${appendType(vdom.type,'second')}`//should store reference to a vd
         return result;
     }
 
-    //----------
+    //---------------------------------------------------------------------------------------------
     function renderHTML($container, newVDOM){
-        // debugger
         updateElement($container, vDOM, newVDOM); //updateElement(parent, old, new)
+        vDOM = newVDOM; //update the vDOM
     }
 
-    
-    function hyperscript(type, props, ...children){ 
-        // debugger
-        //in case one of the elements in the children objects is passed as an array
-        children = (children || []).reduce((acc,child)=> { return acc.concat(child) }, [])
-
-        return { type, props: props || {}, children}
-    }
-
-    //helpers
+    /*  helpers for renderHTML() */
     function createElement({type, props, children}){
-        // debugger
         if(typeof arguments[0] === 'string'){
-            //  || typeof arguments[0] !== 'object'){
             return document.createTextNode(arguments[0])
         }
-        let $el = document.createElement(type) //does this *return* a document element?
+        let $el = document.createElement(type); /* HTML element */
         setProps($el, props);
-        children.map(createElement).forEach($el.appendChild.bind($el))
+        addEventListeners($el, props);
+        children.map(createElement).forEach($el.appendChild.bind($el));
         return $el;
+    }
+
+    function replaceElement($parent, newChild, oldChild){
+        $parent.replaceChild(newChild, oldChild)
+    }
+
+    function replaceText($parent, newString){
+        $parent.innerHTML = newString; //parent.innerText is equivalent
+    }
+
+    function removeElement($parent, oldNode){
+        $parent.removeChild(oldNode)
+    }
+
+    function updateElement($parent, oldNode, newNode, index=0){
+        if(!oldNode){//meaning a node was added in the new object
+            if(!newNode) return;      
+            $parent.appendChild(createElement(newNode))
+        }
+        else if(!newNode){//meaning a node was deleted from the new object
+                let $removedNode = removeElement($parent, $parent.childNodes[index])
+        }
+        else if( isChanged(oldNode, newNode) == 'node'){//if the node itself changed
+                //note that childNodes return a DOM node not HTML element
+                replaceElement($parent, createElement(newNode), $parent.childNodes[index]);
+        }
+        else if(isChanged(oldNode, newNode) == 'text'){
+                replaceText($parent, newNode)
+        }
+        else{
+            if(newNode.props){//if they're not text nodes
+                checkAndUpdateProps($parent, oldNode, newNode);
+            }
+
+            let oldLengh;
+            let newLength;
+            
+            if(!oldNode.children){
+                oldLengh = -1;
+            }
+            else{
+                oldLengh = oldNode.children.length
+            }
+
+            if(!newNode.children){
+                newLength = -1; 
+            }
+            else{
+                newLength = newNode.children.length
+            }
+
+            for(let i = 0 ; i < oldLengh || i < newLength; i++){
+            /*check both lengths so that we'd keeping looping to detect the first 2 cases*/
+            /*the children property on $parent returns html object unlike childNodes which returns DOM*/
+                updateElement($parent.children[index] , oldNode.children[i], newNode.children[i], i)
+            }
+        } 
+    }
+    /* helpers for diffing nodes */
+    function isChanged(oldNode, newNode){
+        if(isNodeChanged(oldNode, newNode)){
+            return 'node'
+        }
+        else if(isTextChanged(oldNode, newNode)){
+            return 'text'
+        }
+    }
+
+    function isNodeChanged(oldNode, newNode){        
+        return (typeof oldNode != typeof newNode) || (oldNode.type != newNode.type) || (newNode.props && newNode.props.forceUpdate)
+        //textNode vs Element || different tags or update is forced bc an event was added
+    }
+
+    function isTextChanged(oldNode, newNode){//both nodes are a string but are different
+        return (typeof oldNode === "string") && (typeof oldNode === 'string') && (newNode != oldNode) 
+    }
+
+    function checkAndUpdateProps($parent, oldNode, newNode){
+        let newProps = newNode.props
+        let oldProps = oldNode.props
+        let allProps = Object.assign({}, oldProps, newProps);
+
+        Object.keys(allProps).forEach( (key) => {
+            if(!newProps.hasOwnProperty(key)){
+                //old node has it but new node doesn't (it was deleted)
+                removeProp($parent, key)
+            }else if(!oldProps.hasOwnProperty(key)){
+                //if new node has it but old node doesn't (it was added)
+                setProp($parent, key, newProps[key])//setProp($parent, key, value)
+                //oldNode has it but new node doesn't (it was deleted)
+            }else if(newProps[key] != oldProps[key]){
+                //both nodes have it --compare values
+                setProp($parent, key, newProps[key])//parent, key, newValue   
+            }
+        }) 
+    }
+
+    /* helpers for diffing props */
+    function isCustomProperty(node, property){
+        //takes a vdom node & a property, which if is custom is not added to the actual DOM
+        return isEventProp(property) || property === 'forceUpdate'
     }
 
     function setProps($el, properties){
         if (!properties) return; 
-        
-        if(properties['class']){//handling the class attribute thing 
-            let {class: propValue} =properties
-            // let propValue = props['class']
-            properties['className'] = propValue
-            delete properties['class']
-        }
+        Object.keys(properties).forEach((key)=> { 
+            setProp($el, key, properties[key])
+        })
+    }
 
-        Object.keys(properties).forEach((key)=> {
-            if(properties[key]){ 
-                $el.setAttribute(key, properties[key])
-            }
-            let events = []
-            if(properties[key].slice(0,2) == 'on'){
-                /* event */
-            }
-            else {
-                /* all other special cases */
+    function setProp($el, key, value){
+        if(isCustomProperty($el, key)){
+            return; //we dont want to set custom properties
+        }
+        else if(key == 'className'){
+            $el.setAttribute('class', value)
+        }
+        else if(typeof value == 'boolean'){
+            setBooleanProp($el, key, value)
+        }
+        else{
+            $el.setAttribute(key,value)
+        }
+    }
+
+    function setBooleanProp($el, key, value){
+        if(value){//if(value == true)
+            $el.setAttribute(key, value)
+            $el[key] = true; 
+        }else {
+            $el[key]= false;
+        }
+    }
+    
+    function removeProp($el, key){
+        if(isCustomProperty($el, key)){
+            return; //we dont want to remove custom properties
+        }
+        else if(key === 'className'){
+            $el.removeAttribute('class')
+        }
+        else if(typeof value == 'boolean'){
+            removeBooleanProp($el, key)
+        }
+        else{
+            $el.removeAttribute(key)
+        }
+    }
+    
+    function removeBooleanProp($el, key){
+        $el.removeAttribute(key)
+        $el[key]= false //in HTML, attributes are part of the object 
+    }
+
+    /* helpers for events handling */
+    function isEventProp(key){
+        return key.slice(0,2) == 'on';
+    }
+
+    function extractEventName(key){
+        return key.slice(2).toLowerCase();
+    }
+
+    function addEventListeners($target, props){
+        Object.keys(props).forEach((key)=>{
+            if(isEventProp(key)){
+                // debugger
+                let eventName = extractEventName(key);
+                $target.addEventListener(eventName, props[key])
+                /*  by default, capture flag is set to false */
+                /*addEventListener($target, listenerFn, captureFlag[if true, prevent bubbling, but allow capturing]) */
             }
         })
-
-        // let attributeNames = []
-        // let index = 0
-        // for(prop in properties){ 
-        //     if(properties && properties.hasOwnProperty(prop)){
-        //         attributeNames.push(prop)
-        //         $el.setAttribute(attributeNames[index], properties[attributeNames[index]])
-        //     /*later*/
-        //     if(attributeNames[index].slice(0,2) == 'on'){
-        //         /* it's an event */
-        //     }
-        //     else {
-        //         /* handle all other special cases for non-event properties */ 
-        //     }
-
-        //     }
-        //     index++;
-        // } 
-
-
     }
 
-    function removeChild(child){ 
-        //for debugging temporarily
-        let refToRC= document.removeChild //reference to removeChild
-        let removedChild = parent.refToRC(child).bind(parent);
-    }
-
-    function isChanged(oldNode, newNode){
-        return oldNode.type != newNode.type
-    }
-
-    function updateElement($parent, $oldNode, newNode, index=0){
-        // debugger
-    //recursive
-        if(!$oldNode){
-        //meaning a node was added in the new object
-            if(!newNode) return;
-            $parent.appendChild(createElement(newNode))
-        }else if(!newNode){
-        //meaning a node was deleted from the new object
-        $parent.removeChild($parent.childNode[index])
-        }else if($oldNode.type == newNode.type){ 
-        // !(isChanged($oldNode, newNode))){
-        let oldLengh = $oldNode.children.length
-        let newLength = newNode.children.length 
-        for(let i=0 ; i < oldLengh || i < newLength; i++){
-            //condition checks both lengths so that we'd keeping looping to detect the first 2 cases
-            updateElement($parent, $oldNode.children[i], newNode.children[i], i)
-        }
-    } else {//either changes
-        $parent.replaceChild(createElement(newNode), $parent.childNode[index]) 
-        // parent.appendChild(createElement(newNode))
-        }
-    }
-
+    //----------------------------------------------------------------------------
     return {//return references
             renderString,
             hyperscript,
             renderHTML,
-        }
+    }
 
-})()
-
-    // function hyperscript(type, props, ...children){ 
-    //     if(props['class']){
-    //         // let {class: className} = props
-    //         let propValue = props['class']
-    //         props['className'] = propValue
-    //         delete props['class']
-    //     }
-    //     children = (children || []).reduce((acc,child)=> {return acc.concat(child)}, [])
-
-    //     return { type, props: props || {}, children}
-    // }
-
-    // let a =
-    //         hyperscript('ul', {class: "list"}, 
-    //             hyperscript('li', null, 'item1'), 
-    //             hyperscript('li', null, 'item2')
-    //         )  
-    
-    // let b = (
-    // <ul class= 'list'>
-    //     <li>
-    //         <p>item1.1</p>
-    //         <p>item 1.2</p>
-    //     </li>
-
-    //     <li>item 2</li>
-    // </ul>)
+} )()

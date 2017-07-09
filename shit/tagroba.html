@@ -9,22 +9,51 @@
         <script type="text/javascript" src="../js/lib/creativdom.js"></script>
         <script> 
             let hyperscript = window.vdom.hyperscript
-
+    
             let a = (
-                hyperscript('ul', {class: "list"}, 
-                hyperscript('li', null, 'item1'), 
-                hyperscript('li', null, 'item2') ) 
-            )  
+                hyperscript('ul', {className: "list-a"}, 
+                    hyperscript('li', null, 
+                        hyperscript('input', {checked: false, class: "input-a"}), 
+                        hyperscript('p', null, 'item 1.2'),
+                    ), 
+                    hyperscript('li', null, hyperscript('button', {onClick: sayHi}, "sup" ))
+                ) 
+            ) 
+            function sayHi(){
+                console.log("hi")
+            }
 
             let b = (
                 hyperscript('ul', {className: "list"}, 
-                hyperscript('li', null, 'item1'), 
-                hyperscript('p', null, 'item2'), 
-                hyperscript( 'li', { className: "item3" }, hyperscript('p', null, 'item3.1') ) ) 
+                    hyperscript('li', null, 'item1'), 
+                    hyperscript('p', null, 'item2'), 
+                    hyperscript('li', { className: "i3" }, 
+                        hyperscript('p', null, 'item3') 
+                    ) 
+                ) 
             )
-            
-            // window.vdom.renderHTML(document.getElementById('root'), b)
-            console.log(window.vdom.renderString(b));
+
+            let c = (
+                hyperscript('ul', {class: "list-c"}, 
+                    hyperscript('li', null, 
+                        hyperscript('input', {checked: true, style: "background-color:red"}), 
+                        hyperscript('p', null, 'item 1.2')
+                    ), 
+                    hyperscript('li', null, 'item2 c') 
+                ) 
+            ) 
+            let d =(
+                hyperscript('p',null,'p1')
+            )
+            let e =(
+                hyperscript('p',null,'p2')
+            )            
+            // console.log(d,e)
+            window.vdom.renderHTML(document.getElementById('root'), a)
+            window.vdom.renderHTML(document.getElementById('root'), c)
+            // window.vdom.renderHTML(document.getElementById('root'), a)
+            console.log(window.vdom.renderString(a))
         </script>
+
     </body>
 </html>
