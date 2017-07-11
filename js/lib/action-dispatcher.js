@@ -6,8 +6,8 @@
         switch(action.type){
             case 'ADD_LIST': 
                 action.todoList.id = state.todoListList.length;
+                state.selectedListIndex = action.todoList.id;
                 state.todoListList.push(action.todoList); 
-                state.selectedListIndex = state.todoListList.length-1; 
                 break;
             case 'SHOW_INPUT': 
                 state.buttonOrInput = "input";

@@ -7,7 +7,6 @@
 // mount(document.body, hello);
 
 function hyperscript(type, props, ...children){ 
-    // debugger
     //in case one of the elements in the children objects is passed as an array
     children = (children || []).reduce((acc,child)=> { return acc.concat(child) }, [])
 

@@ -36,7 +36,7 @@
             let c = (
                 hyperscript('ul', {class: "list-c"}, 
                     hyperscript('li', null, 
-                        hyperscript('input', {checked: true, style: "background-color:red"}), 
+                        hyperscript('input', {checked: true, style: "background-color:red", placeholder: "type here"}), 
                         hyperscript('p', null, 'item 1.2')
                     ), 
                     hyperscript('li', null, 'item2 c') 
@@ -50,9 +50,9 @@
             )            
             // console.log(d,e)
             window.vdom.renderHTML(document.getElementById('root'), a)
-            window.vdom.renderHTML(document.getElementById('root'), c)
+            // window.vdom.renderHTML(document.getElementById('root'), c)
             // window.vdom.renderHTML(document.getElementById('root'), a)
-            console.log(window.vdom.renderString(a))
+            // console.log(window.vdom.renderString(a))
         </script>
 
     </body>

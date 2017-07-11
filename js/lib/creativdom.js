@@ -45,7 +45,6 @@ ${indentation}${closeTag(vdom.type,'second')}`
     /* helpers for renderString(vdom) */
     
     // Array.prototype.joinNodes = function(){
-    //     debugger
     //idea: split the array, into one with strings and one with nodes
     //and pass the initial position of each elem as a second value to these 2 new array objects
     //now join the strings array with "" and join the nodes array with "\n"
@@ -122,7 +121,14 @@ ${indentation}${closeTag(vdom.type,'second')}`
         let $el = document.createElement(type); /* HTML element */
         setProps($el, props);
         addEventListeners($el, props);
-        children.map(createElement).forEach($el.appendChild.bind($el));
+
+        
+        if(props['ref']){
+            props['ref']($el)
+        }
+        if(children){
+            children.map(createElement).forEach($el.appendChild.bind($el));
+        }
         return $el;
     }
 
@@ -135,7 +141,9 @@ ${indentation}${closeTag(vdom.type,'second')}`
     }
 
     function removeElement($parent, oldNode){
-        $parent.removeChild(oldNode)
+        //parentNode is a property of the node which returns an HTML elem
+        return oldNode.parentNode.removeChild(oldNode)
+        // return $parent.removeChild(oldNode)
     }
 
     function updateElement($parent, oldNode, newNode, index=0){
@@ -144,7 +152,7 @@ ${indentation}${closeTag(vdom.type,'second')}`
             $parent.appendChild(createElement(newNode))
         }
         else if(!newNode){//meaning a node was deleted from the new object
-                let $removedNode = removeElement($parent, $parent.childNodes[index])
+                removeElement($parent, $parent.childNodes[index])
         }
         else if( isChanged(oldNode, newNode) == 'node'){//if the node itself changed
                 //note that childNodes return a DOM node not HTML element
@@ -178,7 +186,7 @@ ${indentation}${closeTag(vdom.type,'second')}`
             for(let i = 0 ; i < oldLengh || i < newLength; i++){
             /*check both lengths so that we'd keeping looping to detect the first 2 cases*/
             /*the children property on $parent returns html object unlike childNodes which returns DOM*/
-                updateElement($parent.children[index] , oldNode.children[i], newNode.children[i], i)
+                updateElement($parent.children[index] , oldNode.children[i], newNode.children[i], (newLength<oldLengh?Math.min(i, newLength):i) )
             }
         } 
     }
@@ -204,7 +212,7 @@ ${indentation}${closeTag(vdom.type,'second')}`
     function checkAndUpdateProps($parent, oldNode, newNode){
         let newProps = newNode.props
         let oldProps = oldNode.props
-        let allProps = Object.assign({}, oldProps, newProps);
+        let allProps = Object.assign({}, oldProps, newProps)
 
         Object.keys(allProps).forEach( (key) => {
             if(!newProps.hasOwnProperty(key)){
@@ -224,7 +232,7 @@ ${indentation}${closeTag(vdom.type,'second')}`
     /* helpers for diffing props */
     function isCustomProperty(node, property){
         //takes a vdom node & a property, which if is custom is not added to the actual DOM
-        return isEventProp(property) || property === 'forceUpdate'
+        return isEventProp(property) || property === 'forceUpdate' || property == 'ref' 
     }
 
     function setProps($el, properties){
@@ -288,15 +296,16 @@ ${indentation}${closeTag(vdom.type,'second')}`
     }
 
     function addEventListeners($target, props){
-        Object.keys(props).forEach((key)=>{
-            if(isEventProp(key)){
-                // debugger
-                let eventName = extractEventName(key);
-                $target.addEventListener(eventName, props[key])
-                /*  by default, capture flag is set to false */
-                /*addEventListener($target, listenerFn, captureFlag[if true, prevent bubbling, but allow capturing]) */
-            }
-        })
+        if(props){
+            Object.keys(props).forEach((key)=>{
+                if(isEventProp(key)){
+                    let eventName = extractEventName(key);
+                    $target.addEventListener(eventName, props[key])
+                    /*  by default, capture flag is set to false */
+                    /*addEventListener($target, listenerFn, captureFlag[if true, prevent bubbling, but allow capturing]) */
+                }
+            })
+        }
     }
 
     //----------------------------------------------------------------------------

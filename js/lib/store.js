@@ -7,7 +7,7 @@ window.store = function store(global) {
                 "name": "First List",
                 "items": [
                     {
-                        "content": "Somthing 1",
+                        "content": "Something 1",
                         "done": true
                     },
                     {
