@@ -122,9 +122,9 @@ ${indentation}${closeTag(vdom.type,'second')}`
         setProps($el, props);
         addEventListeners($el, props);
 
-        
-        if(props['ref']){
-            props['ref']($el)
+        if(props['ref']){/*check react ref property*/
+            /* applied to any element, contains a callback that gets called when the element is mounted(attached to DOM) */
+            props['ref']($el) /*call the callback and pass the mounted element to it */
         }
         if(children){
             children.map(createElement).forEach($el.appendChild.bind($el));
